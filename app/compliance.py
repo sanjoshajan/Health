@@ -1,10 +1,18 @@
 import time, json, os
+from flask import g
 
 AUDIT_FILE = 'audit.log'
 RETENTION_DAYS = int(os.environ.get('RETENTION_DAYS','30'))
 
-def audit_log(request, action, pid):
-    entry = {
+def audit_log(action, pid):
+    user = getattr(g, 'user', {})
+    log_entry = {
+        'user': user.get('preferred_username', 'unknown'),
+        'action': action,
+        'patient_id': pid
+    }
+    print(log_entry)
+    """ entry = {
         'ts': int(time.time()),
         'user': request.user.get('preferred_username','unknown'),
         'action': action,
@@ -13,9 +21,10 @@ def audit_log(request, action, pid):
     }
     with open(AUDIT_FILE,'a') as f:
         f.write(json.dumps(entry)+'\n')
-
+ """
 def data_minimize(payload):
     allowed = {k: payload[k] for k in ['id','name','dob','consent'] if k in payload}
+    #allowed = {k: payloads[k] for k in ['id','name','dob','consent'] if k in payload}
     return allowed
 
 def enforce_consent(payload):

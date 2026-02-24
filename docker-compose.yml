@@ -6,12 +6,12 @@ services:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
-      - "8080:8080"
+      - "8081:8081"
     networks: [ appnet ]
   app:
     build: ./app
     environment:
-      - OIDC_ISSUER=http://keycloak:8080/realms/health
+      - OIDC_ISSUER=http://keycloak:8081/realms/health
       - OIDC_AUDIENCE=health-api
       - APP_DATA_KEY=/run/secrets/data_key
     secrets:
@@ -30,6 +30,9 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
+      # Mount Docker socket so Jenkins can use host Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
     networks: [ appnet ]
   prometheus:
     image: prom/prometheus

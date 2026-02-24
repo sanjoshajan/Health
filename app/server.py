@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from auth import require_role
+from auth import verify_jwt, require_roles
 from compliance import audit_log
 from storage import save_record, get_record
 from prometheus_client import Counter, Histogram, generate_latest
@@ -16,23 +16,24 @@ def metrics():
 
 print("before calling GET require_role")
 @app.route('/records/<pid>', methods=['GET'])
-@require_role(['viewer', 'editor'])
+@verify_jwt
+@require_roles(['viewer', 'editor'])
 def get_patient(pid):
     with REQ_LATENCY.labels('/records').time():
         data = get_record(pid)
-    audit_log(request, 'READ', pid)
+    audit_log('READ', pid)
     status = 200 if data else 404
     REQUEST_COUNT.labels('/records', 'GET', str(status)).inc()
     return (jsonify(data), status) if data else (jsonify({'error': 'not found'}), 404)
 
 print("before calling POST require_role")
 @app.route('/records', methods=['POST'])
-@require_role('editor')
+@verify_jwt
+@require_roles(['editor'])
 def create_patient():
     payload = request.get_json()
     pid = save_record(payload)
-    
-    audit_log(request, 'CREATE', pid)
+    audit_log('CREATE', pid)
     REQUEST_COUNT.labels('/records', 'POST', '201').inc()
     return jsonify({'id': pid}), 201
 

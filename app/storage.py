@@ -13,7 +13,7 @@ def _cipher():
 
 def save_record(obj):
     os.makedirs(DATA_DIR, exist_ok=True)
-    pid = obj.get('id') or str(uuid.uuid4())
+    pid = obj.get('patient_id') or str(uuid.uuid4())
     data = json.dumps(obj).encode('utf-8')
     enc = _cipher().encrypt(data)
     with open(os.path.join(DATA_DIR, f'{pid}.bin'), 'wb') as f:
